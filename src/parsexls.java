@@ -16,13 +16,12 @@ public class parsexls {
 
         try {
             BufferedReader file = new BufferedReader(new FileReader(inputfile));
-            while ((string = file.readLine()) != null){
+            while ((string = file.readLine()) != null) {
                 String[] data = string.split(";");
-                for(int i=0;i < data.length;i++){
+                for (int i = 0; i < data.length; i++) {
                     System.out.println(data[i]);
                     dataarray.add(data[i]);
                 }
-
             }
             file.close();
         } catch (IOException e) {
