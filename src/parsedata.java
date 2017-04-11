@@ -59,14 +59,14 @@ class parsedata{
                 ArrayList newString = new ArrayList();
 
                 for (int j = 0; j < input_array.get(0).length; j++) { //Цикл по элементам конкретной строки
-
+                    //значения температур во флоат:
                     if (colnames[j].startsWith("t")){
                         //заменить запятые на точки если есть
                         if (input_array.get(i)[j].toString().contains(",")){
-                            newString.add(input_array.get(i)[j].toString().replace(",",".")+"f");
-                        } else newString.add(input_array.get(i)[j]);
+                            newString.add(Float.parseFloat(input_array.get(i)[j].toString().replace(",",".")));
+                        } else newString.add(Float.parseFloat(input_array.get(i)[j].toString()));
                     }
-
+                    //Дату в дату
                     else if (colnames[j].startsWith("Дата")){
                         //newString.add((Date)input_array.get(i)[j]);
                     }
