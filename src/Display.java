@@ -2,39 +2,46 @@ import org.knowm.xchart.QuickChart;
 import org.knowm.xchart.XChartPanel;
 import org.knowm.xchart.XYChart;
 
+import javax.imageio.ImageIO;
 import javax.swing.*;
-import javax.swing.event.ChangeEvent;
-import javax.swing.event.ChangeListener;
-import javax.swing.event.MenuEvent;
-import javax.swing.event.MenuListener;
-import javax.swing.filechooser.FileFilter;
+import javax.swing.border.EtchedBorder;
 import javax.swing.filechooser.FileNameExtensionFilter;
 import java.awt.*;
 import java.awt.event.ActionEvent;
-import java.awt.event.ActionListener;
-import java.io.File;
+
+import java.awt.image.BufferedImage;
+import java.io.IOException;
 import java.util.ArrayList;
 
 import static javax.swing.JOptionPane.ERROR_MESSAGE;
+import static javax.swing.JOptionPane.INFORMATION_MESSAGE;
 import static javax.swing.JOptionPane.PLAIN_MESSAGE;
 
 public class Display {
-    private static JFrame display;
-    private JPanel mainPanel;
+    public JFrame display;
+    public JPanel mainPanel;  //С этой панели рендерится картинка!!!!!
+    static JMenuBar menuBar;
+    static JButton navBeginBtn;
+    static JButton navEndBtn;
+    static JButton navPrevBtn;
+    static JButton navNextBtn;
+    static JTextField currentFrame;
+    static JLabel frameCount;
+    static JButton playBtn;
+    static JButton stopBtn;
+    static JLabel frameRate;
+    static JTextField enterFPS;
 
-    private int width;
-    private int height;
-
-    private int countPanel;
 
     private JPanel currentChartPanel;
     private JPanel[] panels;
+    public static JMenu menuFileExport;
 
-    //Создание основного окна JFrame и заполнение его
+
+    private int countPanel;
+
+    //Создание окна JFrame и заполнение его
     public Display(int width, int height) {
-        this.width = width;
-        this.height = height;
-
         display = new JFrame("Распределение температур в толщине ограждающей конструкции. v.0.1");
         display.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
         display.setPreferredSize(new Dimension(width, height));
@@ -44,40 +51,19 @@ public class Display {
         display.setResizable(false);
 
         addJMenuBar();
-
-        currentChartPanel = new JPanel();
-        mainPanel = new JPanel(new FlowLayout());
-        mainPanel.add(currentChartPanel);
-        display.add(mainPanel, BorderLayout.BEFORE_FIRST_LINE);
+        addPanels();
 
         display.pack();
         display.setVisible(true);
-
-//      temp();
     }
 
-    //Это что?
-//    private void temp() {
-//        Canvas[] canvas = new Canvas[countPanel];
-//
-//        for (int i = 0; i < countPanel; i++) {
-//            canvas[i] = new Canvas();
-//            canvas[i].setSize(new Dimension(300, 200));
-//            canvas[i].setBackground(new Color(20 * i, 250 - 20 * i, 150 + 5 * i));
-//
-//            panels[i].add(canvas[i]);
-//        }
-//
-//        canvas[0].setBackground(Color.RED);
-//        panels[0].add(canvas[0]);
-//    }
-
-    //Выпадающие меню сверху
-    private void addJMenuBar() {
+    // Выпадающие меню сверху
+    public void addJMenuBar() {
         JMenu menuFile = new JMenu("Файл");
         JMenuItem menuFileOpen = new JMenuItem(new OpenFile());
 
-        JMenu menuFileExport = new JMenu("Экспорт");
+        menuFileExport = new JMenu("Экспорт");
+        menuFileExport.setEnabled(true);
         JMenuItem menuFileExportSingle = new JMenuItem(new ExportCurrent());
         JMenuItem menuFileExportAll = new JMenuItem(new ExportSequence());
         menuFileExport.add(menuFileExportSingle);
@@ -95,86 +81,161 @@ public class Display {
         menuAbout.add(menuAboutHelp);
         menuAbout.add(menuAboutCreators);
 
-        JMenuBar menuBar = new JMenuBar();
+        menuBar = new JMenuBar();
         menuBar.add(menuFile);
         menuBar.add(menuAbout);
 
         display.setJMenuBar(menuBar);
     }
 
-    private void initJPanels() {
-        panels = new JPanel[countPanel];
-        for (int i = 0; i < countPanel; i++) {
-            panels[i] = new JPanel();
-        }
+    // Панели
+    private void addPanels() {
+        // Панель навигации
+        // ---------------------------------------------------------------------
+        JPanel navigationPanel = new JPanel(new FlowLayout());
+        navigationPanel.setPreferredSize(new Dimension(300, 50));
+        navigationPanel.setBorder(new EtchedBorder());
+
+        navBeginBtn = new JButton("<<");
+        navEndBtn = new JButton(">>");
+        navPrevBtn = new JButton("<");
+        navNextBtn = new JButton(">");
+        currentFrame = new JTextField("");
+        frameCount = new JLabel("");
+
+        navBeginBtn.setEnabled(false);
+        navEndBtn.setEnabled(false);
+        navPrevBtn.setEnabled(false);
+        navNextBtn.setEnabled(false);
+        currentFrame.setEnabled(false);
+        frameCount.setEnabled(false);
+
+        navigationPanel.add(navBeginBtn);
+        navigationPanel.add(navPrevBtn);
+        navigationPanel.add(currentFrame);
+        navigationPanel.add(frameCount);
+        navigationPanel.add(navNextBtn);
+        navigationPanel.add(navEndBtn);
+        // ---------------------------------------------------------------------
+
+        // Панель воспроизведения
+        // ---------------------------------------------------------------------
+        JPanel playerPanel = new JPanel(new FlowLayout());
+        playerPanel.setPreferredSize(new Dimension(200, 50));
+        playerPanel.setBorder(new EtchedBorder());
+
+        playBtn = new JButton("PLAY"); //play/pause
+        stopBtn = new JButton("STOP");
+        frameRate = new JLabel("Частота кадров: ");
+        enterFPS = new JTextField("15");
+
+        playBtn.setEnabled(false);
+        stopBtn.setEnabled(false);
+        frameRate.setEnabled(false);
+        enterFPS.setEnabled(false);
+
+        playerPanel.add(playBtn);
+        playerPanel.add(stopBtn);
+        playerPanel.add(frameRate);
+        playerPanel.add(enterFPS);
+        // ---------------------------------------------------------------------
+
+        // Основная верхняя панель
+        // ---------------------------------------------------------------------
+        mainPanel = new JPanel(new FlowLayout());
+        mainPanel.setBorder(new EtchedBorder());
+        mainPanel.setSize(300,600);
+        JLabel label = new JLabel("Текст!");
+        mainPanel.add(label);
+
+
+        // Нижняя Панель
+        // ---------------------------------------------------------------------
+        JPanel lowPanel = new JPanel(new FlowLayout());
+        lowPanel.setPreferredSize(new Dimension(1, 60));
+        lowPanel.setBorder(new EtchedBorder());
+        lowPanel.add(navigationPanel);
+        lowPanel.add(playerPanel);
+
+        //Никитина Панель
+        //currentChartPanel = new JPanel();
+        //mainPanel.add(currentChartPanel);
+
+        display.add(mainPanel, BorderLayout.CENTER);
+        display.add(lowPanel, BorderLayout.SOUTH);
+        System.out.println(mainPanel.getWidth());
     }
+
+//    private void initJPanels() {
+//        panels = new JPanel[countPanel];
+//        for (int i = 0; i < countPanel; i++) {
+//            panels[i] = new JPanel();
+//        }
+//    }
 
     public void addChartOnPanel(XChartPanel chart, int indexPanel) {
         panels[indexPanel].removeAll();
         panels[indexPanel].add(chart);
     }
 
-    private void changePanel(int nextPanel) {
-        currentChartPanel.removeAll();
-        currentChartPanel.add(panels[nextPanel]);
-    }
+//    private void changePanel(int nextPanel) {
+//        currentChartPanel.removeAll();
+//        currentChartPanel.add(panels[nextPanel]);
+//    }
+//
+//    private void addJTabbedPane(int countTabbedPanels) {
+//        JTabbedPane tabbedPane = new JTabbedPane(JTabbedPane.TOP, JTabbedPane.SCROLL_TAB_LAYOUT);
+//        for (int i = 0; i < countPanel; i++) {
+//            JPanel panel = new JPanel();
+//            tabbedPane.add("Chart " + i, panel);
+//        }
+//
+//        tabbedPane.addChangeListener(new ChangeListener() {
+//            @Override
+//            public void stateChanged(ChangeEvent e) {
+//                int nextPanel = tabbedPane.getSelectedIndex();
+//                changePanel(nextPanel);
+//            }
+//        });
+//
+//        initJPanels();
+//        display.add(tabbedPane, BorderLayout.SOUTH);
+//    }
 
-    //Вкладки
-    private void addJTabbedPane(int countTabbedPanels) {
-        JTabbedPane tabbedPane = new JTabbedPane(JTabbedPane.BOTTOM, JTabbedPane.SCROLL_TAB_LAYOUT);
-        for (int i = 0; i < countPanel; i++) {
-            JPanel panel = new JPanel();
-            tabbedPane.add("Chart " + i, panel);
-        }
-
-        tabbedPane.addChangeListener(new ChangeListener() {
-            @Override
-            public void stateChanged(ChangeEvent e) {
-                int nextPanel = tabbedPane.getSelectedIndex();
-                changePanel(nextPanel);
-            }
-        });
-
-        initJPanels();
-        display.add(tabbedPane, BorderLayout.SOUTH);
-    }
-
-    //Отрисовка графиков
-    //public void setGrafics(ArrayList<ArrayList>[] data) {
+    // Отрисовка графиков
+    public void setGrafics(ArrayList<ArrayList>[] data) {
 //        data[0] - даты
 //        data[1] - температуры
-//        addJTabbedPane(data[0].size());
-//        double[] xData = {100, 100, 100};
-//
-//        for (int i = 0; i < data[1].size(); i++) {
-//            double[] yData = {20, 25, 30};
-//            XYChart chart = QuickChart.getChart("График разницы температур слоев", "Слои", "Температура", "y(x)", xData, yData);
-//            //XYChart chart = QuickChart.getChart("График", "Стены","Температуры","Тест",xData, yData);
-//            XChartPanel Graf = new XChartPanel(chart);
-//            addChartOnPanel(Graf, i);
-//        }
+        //addJTabbedPane(data[0].size());
+        double[] xData = {100, 100, 100};
 
-    public void setGrafics(double[][] data) {
-        countPanel = data.length;
-        addJTabbedPane(6);
-
-//        addJTabbedPane(data.length);
-
-        for (int i = 0; i < countPanel; i++) {
-            double[] xData = new double[data[i].length];
-            for (int j = 0; j < data[i].length; j++) {
-                xData[j] = j;
-            }
-
-            XYChart chart = QuickChart.getChart("График разницы температур слоев", "Слои", "Температура", "y(x)", xData, data[i]);
+        for (int i = 0; i < data[1].size(); i++) {
+            double[] yData = {20, 25, 30};
+            XYChart chart = QuickChart.getChart("График разницы температур слоев", "Слои", "Температура", "y(x)", xData, yData);
+            //XYChart chart = QuickChart.getChart("График", "Стены","Температуры","Тест",xData, yData);
             XChartPanel Graf = new XChartPanel(chart);
             addChartOnPanel(Graf, i);
         }
-
     }
 
+//    public void setGrafics(double[][] data) {
+//        countPanel = data.length;
+//        //addJTabbedPane(data.length);
+//        double[] xData = new double[4];
+//        xData[0] = 0;
+//        xData[1] = 4;
+//        xData[2] = 8;
+//        xData[3] = 12;
+//
+//        for (int i = 0; i < countPanel; i++) {
+//            XYChart chart = QuickChart.getChart("График разницы температур слоев", "Слои", "Температура", "y(x)", xData, data[i]);
+//            XChartPanel Graf = new XChartPanel(chart);
+//            addChartOnPanel(Graf, i);
+//        }
+//    }
+
     public static void notifyMessage(String error, String title, int msgType) {
-        JOptionPane.showMessageDialog(display, error, title, msgType);
+        JOptionPane.showMessageDialog(null, error, title, msgType);
     }
 }
 
@@ -191,29 +252,75 @@ class ExitAction extends AbstractAction {
     }
 }
 
-class OpenFile extends  AbstractAction {
+class OpenFile extends AbstractAction {
     OpenFile() {
         putValue(NAME, "Открыть CSV...");
     }
 
     public void actionPerformed(ActionEvent e) {
         JFileChooser jFileChooser = new JFileChooser();
+        jFileChooser.setFileSelectionMode(JFileChooser.FILES_ONLY);
         jFileChooser.setFileFilter(new FileNameExtensionFilter("CSV-файл из программы Excel", "csv"));
-        jFileChooser.showOpenDialog(null);
+        int returnValue = jFileChooser.showOpenDialog(null);
+        if (returnValue == JFileChooser.APPROVE_OPTION) {
+            try {
+                Parsedata parser = new Parsedata();
+                ArrayList<ArrayList>[] arrList = parser.parseCSV(jFileChooser.getSelectedFile().toString());
+                //Main.display.setGrafics(arrList);
+
+
+                Display.menuFileExport.setEnabled(true);
+                Display.navBeginBtn.setEnabled(true);
+                Display.navEndBtn.setEnabled(true);
+                Display.navPrevBtn.setEnabled(true);
+                Display.navNextBtn.setEnabled(true);
+                Display.currentFrame.setEnabled(true);
+                Display.frameCount.setEnabled(true);
+                Display.playBtn.setEnabled(true);
+                Display.stopBtn.setEnabled(true);
+                Display.frameRate.setEnabled(true);
+                Display.enterFPS.setEnabled(true);
+                Display.currentFrame.setText("1");
+                Display.frameCount.setText(" из " + arrList[0].size());
+
+
+                Display.notifyMessage("Файл успешно загружен!", "", INFORMATION_MESSAGE);
+            } catch (Exception exc) {
+                Display.notifyMessage(exc.getMessage(), "Ошибка!", ERROR_MESSAGE);
+            }
+        }
     }
 }
 
-class ExportCurrent extends  AbstractAction {
+class ExportCurrent extends AbstractAction {
     ExportCurrent() {
         putValue(NAME, "Текущего кадра...");
     }
 
     public void actionPerformed(ActionEvent e) {
+        JFileChooser jFileChooser = new JFileChooser();
+        jFileChooser.setFileFilter(new FileNameExtensionFilter("Изображение в формате PNG", "png"));
+        int returnValue = jFileChooser.showSaveDialog(null);
+        if (returnValue == JFileChooser.APPROVE_OPTION) {
+            BufferedImage img = new BufferedImage(
+                    Main.display.mainPanel.getWidth(),
+                    Main.display.mainPanel.getHeight(),
+                    BufferedImage.TYPE_INT_ARGB);
 
+            //Graphics g = img.getGraphics();
+            //Main.display.mainPanel.paint(g);
+            //g.dispose();
+
+            try {
+                //ImageIO.write(img, "png", jFileChooser.getSelectedFile());
+            } catch (Exception exc) {
+                exc.printStackTrace();
+            }
+        }
     }
 }
 
-class ExportSequence extends  AbstractAction {
+class ExportSequence extends AbstractAction {
     ExportSequence() {
         putValue(NAME, "Всех кадров...");
     }
@@ -223,7 +330,7 @@ class ExportSequence extends  AbstractAction {
     }
 }
 
-class HelpWindow extends  AbstractAction {
+class HelpWindow extends AbstractAction {
     HelpWindow() {
         putValue(NAME, "Справка");
     }
@@ -233,7 +340,7 @@ class HelpWindow extends  AbstractAction {
     }
 }
 
-class CreatorsWindow extends  AbstractAction {
+class CreatorsWindow extends AbstractAction {
     CreatorsWindow() {
         putValue(NAME, "Авторы");
     }
