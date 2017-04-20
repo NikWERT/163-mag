@@ -2,7 +2,9 @@ $ cat .gitignore
 
 .svn
 
-.idea
+.idea/*
+
+.class
 
 *.imi
 
