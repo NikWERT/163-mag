@@ -10,7 +10,7 @@ import java.awt.*;
 import java.awt.event.ActionEvent;
 
 import java.awt.image.BufferedImage;
-import java.io.IOException;
+import java.io.File;
 import java.util.ArrayList;
 
 import static javax.swing.JOptionPane.ERROR_MESSAGE;
@@ -31,12 +31,10 @@ public class Display {
     static JButton stopBtn;
     static JLabel frameRate;
     static JTextField enterFPS;
-
+    static JMenu menuFileExport;
 
     private JPanel currentChartPanel;
     private JPanel[] panels;
-    public static JMenu menuFileExport;
-
 
     private int countPanel;
 
@@ -50,8 +48,8 @@ public class Display {
         display.setLocation(display.getX() - width / 2, display.getY() - height / 2);
         display.setResizable(false);
 
-        addJMenuBar();
         addPanels();
+        addJMenuBar();
 
         display.pack();
         display.setVisible(true);
@@ -64,7 +62,7 @@ public class Display {
 
         menuFileExport = new JMenu("Экспорт");
         menuFileExport.setEnabled(true);
-        JMenuItem menuFileExportSingle = new JMenuItem(new ExportCurrent());
+        JMenuItem menuFileExportSingle = new JMenuItem(new ExportCurrent(mainPanel));
         JMenuItem menuFileExportAll = new JMenuItem(new ExportSequence());
         menuFileExport.add(menuFileExportSingle);
         menuFileExport.add(menuFileExportAll);
@@ -91,6 +89,7 @@ public class Display {
     // Панели
     private void addPanels() {
         // Панель навигации
+
         // ---------------------------------------------------------------------
         JPanel navigationPanel = new JPanel(new FlowLayout());
         navigationPanel.setPreferredSize(new Dimension(300, 50));
@@ -121,7 +120,7 @@ public class Display {
         // Панель воспроизведения
         // ---------------------------------------------------------------------
         JPanel playerPanel = new JPanel(new FlowLayout());
-        playerPanel.setPreferredSize(new Dimension(200, 50));
+        playerPanel.setPreferredSize(new Dimension(300, 50));
         playerPanel.setBorder(new EtchedBorder());
 
         playBtn = new JButton("PLAY"); //play/pause
@@ -140,15 +139,6 @@ public class Display {
         playerPanel.add(enterFPS);
         // ---------------------------------------------------------------------
 
-        // Основная верхняя панель
-        // ---------------------------------------------------------------------
-        mainPanel = new JPanel(new FlowLayout());
-        mainPanel.setBorder(new EtchedBorder());
-        mainPanel.setSize(300,600);
-        JLabel label = new JLabel("Текст!");
-        mainPanel.add(label);
-
-
         // Нижняя Панель
         // ---------------------------------------------------------------------
         JPanel lowPanel = new JPanel(new FlowLayout());
@@ -157,13 +147,21 @@ public class Display {
         lowPanel.add(navigationPanel);
         lowPanel.add(playerPanel);
 
+
+        // Основная верхняя панель
+        // ---------------------------------------------------------------------
+        mainPanel = new JPanel(new BorderLayout());
+        mainPanel.setBorder(new EtchedBorder());
+        mainPanel.setSize(300,600);
+        JLabel label = new JLabel("Текст!");
+        mainPanel.add(label, BorderLayout.CENTER);
+
         //Никитина Панель
         //currentChartPanel = new JPanel();
         //mainPanel.add(currentChartPanel);
 
         display.add(mainPanel, BorderLayout.CENTER);
         display.add(lowPanel, BorderLayout.SOUTH);
-        System.out.println(mainPanel.getWidth());
     }
 
 //    private void initJPanels() {
@@ -293,8 +291,12 @@ class OpenFile extends AbstractAction {
 }
 
 class ExportCurrent extends AbstractAction {
-    ExportCurrent() {
+
+    static private JPanel panelToRender;
+
+    ExportCurrent(JPanel mainPanel) {
         putValue(NAME, "Текущего кадра...");
+        panelToRender = mainPanel;
     }
 
     public void actionPerformed(ActionEvent e) {
@@ -302,17 +304,13 @@ class ExportCurrent extends AbstractAction {
         jFileChooser.setFileFilter(new FileNameExtensionFilter("Изображение в формате PNG", "png"));
         int returnValue = jFileChooser.showSaveDialog(null);
         if (returnValue == JFileChooser.APPROVE_OPTION) {
-            BufferedImage img = new BufferedImage(
-                    Main.display.mainPanel.getWidth(),
-                    Main.display.mainPanel.getHeight(),
-                    BufferedImage.TYPE_INT_ARGB);
-
-            //Graphics g = img.getGraphics();
-            //Main.display.mainPanel.paint(g);
-            //g.dispose();
+            BufferedImage img = new BufferedImage(panelToRender.getWidth(), panelToRender.getHeight(), BufferedImage.TYPE_INT_RGB);
+            panelToRender.paint(img.getGraphics());
 
             try {
-                //ImageIO.write(img, "png", jFileChooser.getSelectedFile());
+                File file = new File(jFileChooser.getSelectedFile().getAbsolutePath() + ".png");
+                System.out.println(file);
+                ImageIO.write(img, "png", file);
             } catch (Exception exc) {
                 exc.printStackTrace();
             }
