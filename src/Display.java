@@ -35,7 +35,6 @@ public class Display {
 
     private JPanel currentChartPanel;
     private JPanel[] panels;
-
     private int countPanel;
 
     //Создание окна JFrame и заполнение его
@@ -61,7 +60,7 @@ public class Display {
         JMenuItem menuFileOpen = new JMenuItem(new OpenFile());
 
         menuFileExport = new JMenu("Экспорт");
-        menuFileExport.setEnabled(true);
+        menuFileExport.setEnabled(false);
         JMenuItem menuFileExportSingle = new JMenuItem(new ExportCurrent(mainPanel));
         JMenuItem menuFileExportAll = new JMenuItem(new ExportSequence());
         menuFileExport.add(menuFileExportSingle);
@@ -89,8 +88,6 @@ public class Display {
     // Панели
     private void addPanels() {
         // Панель навигации
-
-        // ---------------------------------------------------------------------
         JPanel navigationPanel = new JPanel(new FlowLayout());
         navigationPanel.setPreferredSize(new Dimension(300, 50));
         navigationPanel.setBorder(new EtchedBorder());
@@ -139,7 +136,7 @@ public class Display {
         playerPanel.add(enterFPS);
         // ---------------------------------------------------------------------
 
-        // Нижняя Панель
+        // Нижняя Панель (на которой панели навигации и воспроизведения)
         // ---------------------------------------------------------------------
         JPanel lowPanel = new JPanel(new FlowLayout());
         lowPanel.setPreferredSize(new Dimension(1, 60));
@@ -148,13 +145,13 @@ public class Display {
         lowPanel.add(playerPanel);
 
 
-        // Основная верхняя панель
+        // Основная верхняя панель (на ней график. с неё рендерится)
         // ---------------------------------------------------------------------
         mainPanel = new JPanel(new BorderLayout());
         mainPanel.setBorder(new EtchedBorder());
-        mainPanel.setSize(300,600);
-        JLabel label = new JLabel("Текст!");
-        mainPanel.add(label, BorderLayout.CENTER);
+
+        JLabel dateLabel = new JLabel("Тут типа дата будет");
+        mainPanel.add(dateLabel, BorderLayout.NORTH);
 
         //Никитина Панель
         //currentChartPanel = new JPanel();
@@ -205,7 +202,7 @@ public class Display {
 //        data[0] - даты
 //        data[1] - температуры
         //addJTabbedPane(data[0].size());
-        double[] xData = {100, 100, 100};
+        double[] xData = {100, 100, 100}; //толщины
 
         for (int i = 0; i < data[1].size(); i++) {
             double[] yData = {20, 25, 30};
