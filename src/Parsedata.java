@@ -1,24 +1,15 @@
 import java.io.*;
-import java.text.ParseException;
 import java.util.ArrayList;
-import java.util.Date;
 
 //  Created by Lex on 14.03.2017.
-//  имяПеременной.get(номер строки).get(номер столбца);
 
 public class Parsedata {
     private ArrayList<String[]> input_array = new ArrayList<>();
     private String[] colnames;
-    private ArrayList<Date> outputDates = new ArrayList<>();
-    private ArrayList<ArrayList<Float>> outputFloats = new ArrayList<>();
-    //private SimpleDateFormat format = new SimpleDateFormat("dd.MM.yy  H:mm:ss");
-    //private SimpleDateFormat format1 = new SimpleDateFormat("H:mm:ss");
+    private double maxTemp;
+    private double minTemp;
 
-    String[] getColnames() {
-        return colnames;
-    }
-
-    public ArrayList<ArrayList>[] parseCSV(String inputfile) throws IOException, ParseException, NumberFormatException {
+    public Parsedata(String inputfile) throws IOException {
         BufferedReader bufferedReader = new BufferedReader(
                 new InputStreamReader(new FileInputStream(new File(inputfile)), "Windows-1251"));
         String string;
@@ -28,11 +19,10 @@ public class Parsedata {
         }
         bufferedReader.close();
 
-// Разделение на 2 массива: массив с именами столбцов (String[] colnames) и лист ArrayList<String[]> input_array
         colnames = input_array.get(0);
         input_array.remove(0);
 
-// Проверки:
+        // Проверки:
         // Во всех строках одинаковое количество столбцов.
         int numberCols = input_array.get(0).length;
         for (int i = 0; i < input_array.size(); i++) {
@@ -52,40 +42,53 @@ public class Parsedata {
                 }
             }
         }
+    }
 
-//      Если всё хорошо, то закачиваем данные в коллекции:
-//      ArrayList<String> outputDates
-//      ArrayList<Float> outputFloats
-//      с преобразованием типов данных:
+    public String[] getColnames() {
+        return colnames;
+    }
 
-//      Цикл по строкам
+    public String[] getDataArray() {
+        String[] datesArray = new String[input_array.size()];
         for (int i = 0; i < input_array.size(); i++) {
-            Date newDateString = new Date();
-            ArrayList<Float> newFloatString = new ArrayList<>();
-
-            //Цикл по элементам конкретной строки
             for (int j = 0; j < input_array.get(0).length; j++) {
-                //значения температур во флоат:
-                if (colnames[j].startsWith("t") || colnames[j].startsWith("T")) {
-                    //заменить запятые на точки если есть
-                    if (input_array.get(i)[j].contains(",")) {
-                        newFloatString.add(Float.parseFloat(input_array.get(i)[j].replace(",", ".")));
-                    } else newFloatString.add(Float.parseFloat(input_array.get(i)[j]));
-                }
-                //Дату в дату
-                else if (colnames[j].startsWith("Дата")) {
-                    newDateString = new Date();
-                    //newDateString = format.parse(input_array.get(i)[j]);
+
+                if (colnames[j].startsWith("Д") || colnames[j].startsWith("д")) {
+                    datesArray[i] = input_array.get(i)[j];
                 }
             }
-            //записываем строку в конечную коллекцию строк
-            outputDates.add(newDateString);
-            outputFloats.add(newFloatString);
         }
+        return datesArray;
+    }
 
-        ArrayList[] output = new ArrayList[2];
-        output[0] = outputDates;
-        output[1] = outputFloats;
-        return output;
+    public double[][] getTemperatureArray() {
+        double[][] temperaturesArray = new double[input_array.size()][];
+
+        for (int i = 0; i < input_array.size(); i++) {
+            ArrayList<Double> tempString = new ArrayList<>();
+            for (int j = 0; j < input_array.get(0).length; j++) {
+                if (colnames[j].startsWith("t") || colnames[j].startsWith("T")) {
+                    if (input_array.get(i)[j].contains(",")) {
+                        tempString.add(Double.parseDouble(input_array.get(i)[j].replace(",", ".")));
+                    } else tempString.add(Double.parseDouble(input_array.get(i)[j]));
+                }
+            }
+            double[] stroka = new double[tempString.size()];
+            for (int j = 0; j < tempString.size(); j++) {
+                if (maxTemp < tempString.get(j)) maxTemp = tempString.get(j);
+                if (minTemp > tempString.get(j)) minTemp = tempString.get(j);
+                stroka[j] = tempString.get(j);
+            }
+            temperaturesArray[i] = stroka;
+        }
+        return temperaturesArray;
+    }
+
+    public double getMaxTemp() {
+        return maxTemp;
+    }
+
+    public double getMinTemp() {
+        return minTemp;
     }
 }

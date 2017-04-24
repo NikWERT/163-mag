@@ -1,6 +1,5 @@
-public class Main {
-    static Display display;
+public class Main  {
     public static void main(String[] args) {
-        Display display = new Display(1000, 700);
+        Display display = new Display(700, 600);
     }
 }
