@@ -41,6 +41,7 @@ public class Display implements ActionListener, KeyListener {
 
     private Chart chartPanel;
     private ParseData parser;
+    private Thread playerThread;
 
     public Display(int width, int height) {
         display = new JFrame("Распределение температур в толщине ограждающей конструкции. v.0.1");
@@ -226,6 +227,7 @@ public class Display implements ActionListener, KeyListener {
 
     private void buttonStopAction() {
         if (frameCount > 1 && playBtn.getText().equals("PAUSE")) {
+            playerThread.interrupt();
             playBtn.setText("PLAY");
         }
     }
@@ -233,40 +235,36 @@ public class Display implements ActionListener, KeyListener {
     private void buttonPlayAction() {
         if (playBtn.getText().equals("PLAY")) {
             playBtn.setText("PAUSE");
-            //currChart = 480;
-            int playFrom = currChart;
-            int playFPS = 100;
-            try {
-                playFPS = Math.round(1000 / Integer.parseInt(enterFPS.getText()));
-                while (currChart < frameCount - 1) {
-                    currChart++;
-                    Thread.sleep(playFPS);
-                    SwingUtilities.invokeAndWait(new Runnable() {
-                        @Override
-                        public void run() {
+
+            playerThread = new Thread(() -> {
+                int playFPS;
+                try {
+                    playFPS = Math.round(1000 / Integer.parseInt(enterFPS.getText()));
+                    while (currChart < frameCount - 1) {
+                        currChart++;
+                        Thread.sleep(playFPS);
+                        SwingUtilities.invokeLater(() -> {
                             navCurrFrField.setText(currChart + 1 + "");
                             chartPanel.update(currChart, parser);
                             display.repaint();
-                        }
-                    });
+                        });
+                    }
                 }
-            }
-            catch (InterruptedException inter) {
-                System.out.println(inter.getMessage());
-                inter.printStackTrace();
-            }
-            catch (InvocationTargetException inter) {
-                System.out.println(inter.getMessage());
-                inter.printStackTrace();
-            }
-            catch (IllegalArgumentException e) {
-                enterFPS.setText(100 + "");
-                playFPS = 100;
-                JOptionPane.showMessageDialog(display, "Введите целое положительное число", "Ошибка!", ERROR_MESSAGE);
-            }
-            playBtn.setText("PLAY");
+                catch (InterruptedException inter) {
+                    System.out.println("Поток прерван");
+                }
+                catch (IllegalArgumentException e) {
+                    enterFPS.setText(30 + "");
+                    playFPS = Math.round(1000 / Integer.parseInt(enterFPS.getText()));
+                    JOptionPane.showMessageDialog(display, "Введите целое положительное число", "Ошибка!", ERROR_MESSAGE);
+                }
+                playBtn.setText("PLAY");
+                playerThread.stop();
+            });
+            playerThread.start();
 
         } else if (playBtn.getText().equals("PAUSE")) {
+            playerThread.interrupt();
             playBtn.setText("PLAY");
         }
     }
@@ -378,7 +376,7 @@ public class Display implements ActionListener, KeyListener {
         if (returnValue == JFileChooser.APPROVE_OPTION) {
             try {
                 parser = new ParseData(jFileChooser.getSelectedFile().toString());
-                enterFPS.setText(100 + "");
+                enterFPS.setText(30 + "");
                 frameCount = parser.getDataArray().length;
                 chartPanel = new Chart(parser);
                 mainPanel.add(chartPanel);
@@ -435,5 +433,4 @@ public class Display implements ActionListener, KeyListener {
     public void keyReleased(KeyEvent e) {
 
     }
-
 }
