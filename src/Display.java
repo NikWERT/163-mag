@@ -243,12 +243,11 @@ public class Display implements ActionListener, KeyListener {
     private void buttonPlayAction() {
         if (playBtn.getText().equals("PLAY")) {
             playBtn.setText("PAUSE");
-
-            int playFrom = currChart;
-            int playFPS = 10;//1000 / Integer.parseInt(enterFPS.getText());
-
             //currChart = 480;
+            int playFrom = currChart;
+            int playFPS = 100;
             try {
+                playFPS = Math.round(1000 / Integer.parseInt(enterFPS.getText()));
                 while (currChart < frameCount - 1) {
                     currChart++;
                     Thread.sleep(playFPS);
@@ -261,9 +260,15 @@ public class Display implements ActionListener, KeyListener {
                         }
                     });
                 }
-            } catch (Exception inter) {
+            }
+            catch (InterruptedException inter) {
                 System.out.println(inter.getMessage());
                 inter.printStackTrace();
+            }
+            catch (IllegalArgumentException e) {
+                enterFPS.setText(100 + "");
+                playFPS = 100;
+                JOptionPane.showMessageDialog(display, "Введите целое положительное число", "Ошибка!", ERROR_MESSAGE);
             }
             playBtn.setText("PLAY");
 
@@ -379,7 +384,7 @@ public class Display implements ActionListener, KeyListener {
         if (returnValue == JFileChooser.APPROVE_OPTION) {
             try {
                 parser = new ParseData(jFileChooser.getSelectedFile().toString());
-                enterFPS.setText(24 + "");
+                enterFPS.setText(100 + "");
                 frameCount = parser.getDataArray().length;
                 chartPanel = new Chart(parser);
                 mainPanel.add(chartPanel);
