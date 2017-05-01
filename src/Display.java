@@ -10,6 +10,7 @@ import java.awt.event.KeyListener;
 import java.awt.image.BufferedImage;
 import java.io.File;
 import java.io.IOException;
+import java.lang.reflect.InvocationTargetException;
 
 import static javax.swing.JOptionPane.*;
 
@@ -97,7 +98,6 @@ public class Display implements ActionListener, KeyListener {
     }
 
     private void addPanels() {
-
         // Панель навигации
         JPanel navigationPanel = new JPanel();
         navigationPanel.setBorder(new EtchedBorder());
@@ -188,44 +188,34 @@ public class Display implements ActionListener, KeyListener {
         if (e.getSource().equals(menuFileOpen)) {
             OpenFileAction();
         }
-
         if (e.getSource().equals(menuFileExportSingle)) {
             ExportSingleAction();
         }
-
         if (e.getSource().equals(menuFileExportAll)) {
             ExportAllAction();
         }
-
         if (e.getSource().equals(menuFileExit)) {
             System.exit(0);
         }
-
         if (e.getSource().equals(menuAboutHelp)) {
             HelpDialogAction();
         }
-
         if (e.getSource().equals(menuAboutCreators)) {
             CreatorsDialogAction();
         }
-
 //Кнопки в окне
         if (e.getSource().equals(navBeginBtn)) {
             buttonBeginAction();
         }
-
         if (e.getSource().equals(navEndBtn)) {
             buttonEndAction();
         }
-
         if (e.getSource().equals(navPrevBtn)) {
             buttonPreviousAction();
         }
-
         if (e.getSource().equals(navNextBtn)) {
             buttonNextAction();
         }
-
         if (e.getSource().equals(playBtn)) {
             buttonPlayAction();
         }
@@ -251,7 +241,7 @@ public class Display implements ActionListener, KeyListener {
                 while (currChart < frameCount - 1) {
                     currChart++;
                     Thread.sleep(playFPS);
-                    SwingUtilities.invokeLater(new Runnable() {
+                    SwingUtilities.invokeAndWait(new Runnable() {
                         @Override
                         public void run() {
                             navCurrFrField.setText(currChart + 1 + "");
@@ -262,6 +252,10 @@ public class Display implements ActionListener, KeyListener {
                 }
             }
             catch (InterruptedException inter) {
+                System.out.println(inter.getMessage());
+                inter.printStackTrace();
+            }
+            catch (InvocationTargetException inter) {
                 System.out.println(inter.getMessage());
                 inter.printStackTrace();
             }
@@ -408,10 +402,28 @@ public class Display implements ActionListener, KeyListener {
         }
     }
 
-
     @Override
     public void keyPressed(KeyEvent e) {
+        if (e.getSource().equals(navCurrFrField)){
+            if (e.getKeyChar() == KeyEvent.VK_ENTER) try {
+                int newcurrChart = Integer.parseInt(navCurrFrField.getText());
+                if (newcurrChart > 0 && newcurrChart <= frameCount) {
+                    currChart = newcurrChart - 1;
+                } else if (newcurrChart > frameCount) {
+                    currChart = frameCount - 1;
+                } else if (newcurrChart < 1){
+                    currChart = 0;
+                }
 
+            } catch (NumberFormatException ignored) {
+                System.out.println(ignored.getMessage());
+
+            } finally {
+                chartPanel.update(currChart, parser);
+                mainPanel.repaint();
+                navCurrFrField.setText(currChart + 1 + "");
+            }
+        }
     }
 
     @Override
@@ -421,22 +433,7 @@ public class Display implements ActionListener, KeyListener {
 
     @Override
     public void keyReleased(KeyEvent e) {
-        if (e.getSource().equals(navCurrFrField)) try {
-            int newcurrChart = Integer.parseInt(navCurrFrField.getText());
-            if (newcurrChart > 0 && newcurrChart <= frameCount) {
-                currChart = newcurrChart - 1;
-            } else if (newcurrChart > frameCount) {
-                currChart = frameCount - 1;
-            }
 
-        } catch (NumberFormatException ignored) {
-            System.out.println(ignored.getMessage());
-
-        } finally {
-            chartPanel.update(currChart, parser);
-            mainPanel.repaint();
-            navCurrFrField.setText(currChart + 1 + "");
-        }
     }
 
 }
