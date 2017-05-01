@@ -3,13 +3,13 @@ import java.util.ArrayList;
 
 //  Created by Lex on 14.03.2017.
 
-public class Parsedata {
+public class ParseData {
     private ArrayList<String[]> input_array = new ArrayList<>();
     private String[] colnames;
     private double maxTemp;
     private double minTemp;
 
-    public Parsedata(String inputfile) throws IOException {
+    public ParseData(String inputfile) throws IOException {
         BufferedReader bufferedReader = new BufferedReader(
                 new InputStreamReader(new FileInputStream(new File(inputfile)), "Windows-1251"));
         String string;

@@ -1,7 +1,6 @@
 import org.knowm.xchart.QuickChart;
 import org.knowm.xchart.XChartPanel;
 import org.knowm.xchart.XYChart;
-import org.knowm.xchart.XYSeries;
 
 import javax.swing.*;
 import javax.swing.border.EtchedBorder;
@@ -10,24 +9,23 @@ import java.awt.*;
 public class Chart extends JPanel {
 
     private XYChart xyChart;
-
     private static double[] xdata = {0, 100, 200, 300};
 
-    void update(int currChart, Parsedata parsedata) {
-        xyChart.setTitle(parsedata.getDataArray()[currChart]);
-        xyChart.updateXYSeries("xySeries", xdata, parsedata.getTemperatureArray()[currChart], null);
+    void update(int currChart, ParseData parsedData) {
+        xyChart.setTitle(parsedData.getDataArray()[currChart]);
+        xyChart.updateXYSeries("xySeries", xdata, parsedData.getTemperatureArray()[currChart], null);
     }
 
-    Chart(Parsedata parsedata) {
-        xyChart = QuickChart.getChart(parsedata.getDataArray()[0], "Слои", "Температура", "xySeries", xdata, parsedata.getTemperatureArray()[0]);
+    Chart(ParseData parsedData) {
+        xyChart = QuickChart.getChart(parsedData.getDataArray()[0], "Слои", "Температура", "xySeries", xdata, parsedData.getTemperatureArray()[0]);
         xyChart.getStyler().setLegendVisible(false);
-        xyChart.getStyler().setYAxisMin(parsedata.getMinTemp() - 5);
-        xyChart.getStyler().setYAxisMax(parsedata.getMaxTemp() + 5);
+        xyChart.getStyler().setYAxisMin(parsedData.getMinTemp() - 5);
+        xyChart.getStyler().setYAxisMax(parsedData.getMaxTemp() + 5);
 
         this.setLayout(new BorderLayout());
-        XChartPanel xChartPanel = new XChartPanel(xyChart);
+        XChartPanel<XYChart> xChartPanel = new XChartPanel<>(xyChart);
         JPanel thickness = new JPanel();
-        for (int i = 1; i <= parsedata.getTemperatureArray()[0].length; i++) {
+        for (int i = 1; i <= parsedData.getTemperatureArray()[0].length; i++) {
             thickness.add(new JTextField("100"));
         }
         thickness.setBorder(new EtchedBorder());
