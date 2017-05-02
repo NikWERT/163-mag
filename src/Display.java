@@ -15,8 +15,7 @@ import static javax.swing.JOptionPane.*;
 
 public class Display implements ActionListener, KeyListener {
     private JFrame display;
-    private JPanel mainPanel;  //С этой панели рендерится картинка!!!!!
-
+    private JPanel mainPanel;
     private JMenuItem menuFileOpen;
     private JMenu menuFileExport;
     private JMenuItem menuFileExportSingle;
@@ -34,12 +33,10 @@ public class Display implements ActionListener, KeyListener {
     private JButton stopBtn;
     private JLabel frameRate;
     private JTextField enterFPS;
-
     private int frameCount;  //общее количество кадров от 1
-    private int currChart = 0; //текущий кадр (от 0 до frameCount-1)
-
+    public static int currChart = 0; //текущий кадр (от 0 до frameCount-1)
     private Chart chartPanel;
-    private ParseData parser;
+    public static ParseData parser;
     private Thread playerThread;
 
     public Display(int width, int height) {
@@ -227,6 +224,9 @@ public class Display implements ActionListener, KeyListener {
     private void buttonStopAction() {
         if (frameCount > 1 && playBtn.getText().equals("PAUSE")) {
             playerThread.interrupt();
+            currChart = 0;
+            navCurrFrField.setText(currChart + 1 + "");
+            chartPanel.update();
             playBtn.setText("PLAY");
         }
     }
@@ -244,15 +244,11 @@ public class Display implements ActionListener, KeyListener {
                         Thread.sleep(playFPS);
                         SwingUtilities.invokeLater(() -> {
                             navCurrFrField.setText(currChart + 1 + "");
-                            chartPanel.update(currChart, parser);
-                            display.repaint();
+                            chartPanel.update();
                         });
                     }
-                }
-                catch (InterruptedException inter) {
-                    System.out.println("Поток прерван");
-                }
-                catch (IllegalArgumentException e) {
+                } catch (InterruptedException inter) {
+                } catch (IllegalArgumentException e) {
                     enterFPS.setText(30 + "");
                     playFPS = Math.round(1000 / Integer.parseInt(enterFPS.getText()));
                     JOptionPane.showMessageDialog(display, "Введите целое положительное число", "Ошибка!", ERROR_MESSAGE);
@@ -272,8 +268,7 @@ public class Display implements ActionListener, KeyListener {
         if (frameCount > 1 && currChart < frameCount - 1) {
             currChart++;
             navCurrFrField.setText(currChart + 1 + "");
-            chartPanel.update(currChart, parser);
-            chartPanel.repaint();
+            chartPanel.update();
         }
     }
 
@@ -281,8 +276,7 @@ public class Display implements ActionListener, KeyListener {
         if (frameCount > 1 && currChart > 0) {
             currChart--;
             navCurrFrField.setText(currChart + 1 + "");
-            chartPanel.update(currChart, parser);
-            chartPanel.repaint();
+            chartPanel.update();
         }
     }
 
@@ -290,8 +284,7 @@ public class Display implements ActionListener, KeyListener {
         if (frameCount > 1 && currChart < frameCount - 1) {
             currChart = frameCount - 1;
             navCurrFrField.setText(currChart + 1 + "");
-            chartPanel.update(currChart, parser);
-            chartPanel.repaint();
+            chartPanel.update();
         }
     }
 
@@ -299,8 +292,7 @@ public class Display implements ActionListener, KeyListener {
         if (frameCount > 1) {
             currChart = 0;
             navCurrFrField.setText(currChart + 1 + "");
-            chartPanel.update(currChart, parser);
-            chartPanel.repaint();
+            chartPanel.update();
         }
     }
 
@@ -336,8 +328,7 @@ public class Display implements ActionListener, KeyListener {
                     savePicture(img, file);
                     currChart = i;
                     navCurrFrField.setText(currChart + 1 + "");
-                    chartPanel.update(currChart, parser);
-                    chartPanel.repaint();
+                    chartPanel.update();
                 }
                 JOptionPane.showMessageDialog(display, frameCount + " файлов успешно сохранёно.", "", INFORMATION_MESSAGE);
             } catch (IOException exc) {
@@ -401,14 +392,14 @@ public class Display implements ActionListener, KeyListener {
 
     @Override
     public void keyPressed(KeyEvent e) {
-        if (e.getSource().equals(navCurrFrField)){
+        if (e.getSource().equals(navCurrFrField)) {
             if (e.getKeyChar() == KeyEvent.VK_ENTER) try {
                 int newcurrChart = Integer.parseInt(navCurrFrField.getText());
                 if (newcurrChart > 0 && newcurrChart <= frameCount) {
                     currChart = newcurrChart - 1;
                 } else if (newcurrChart > frameCount) {
                     currChart = frameCount - 1;
-                } else if (newcurrChart < 1){
+                } else if (newcurrChart < 1) {
                     currChart = 0;
                 }
 
@@ -416,8 +407,7 @@ public class Display implements ActionListener, KeyListener {
                 System.out.println(ignored.getMessage());
 
             } finally {
-                chartPanel.update(currChart, parser);
-                mainPanel.repaint();
+                chartPanel.update();
                 navCurrFrField.setText(currChart + 1 + "");
             }
         }
